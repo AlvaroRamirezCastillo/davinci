@@ -1,0 +1,33 @@
+<aside class="component-catalog" aria-labelledby="component-catalog-title">
+  <header class="component-catalog__header">
+    <p>Catalogo</p>
+    <h2 id="component-catalog-title">Componentes</h2>
+  </header>
+
+  @if (isLoading()) {
+    <p class="component-catalog__status">Cargando componentes...</p>
+  } @else if (hasError()) {
+    <p class="component-catalog__status">No se pudo cargar docs.json.</p>
+  } @else if (!hasComponents()) {
+    <p class="component-catalog__status">No hay componentes documentados.</p>
+  } @else {
+    <ul class="component-catalog__list">
+      @for (component of components(); track component.tag) {
+        <li
+          class="component-catalog__item"
+          draggable="true"
+          (dragstart)="onDragStart($event, component.tag)"
+        >
+          <img
+            class="component-catalog__image"
+            [src]="imagePath(component.tag)"
+            [alt]="component.tag"
+            width="56"
+            height="56"
+          />
+          <span class="component-catalog__name">{{ component.tag }}</span>
+        </li>
+      }
+    </ul>
+  }
+</aside>

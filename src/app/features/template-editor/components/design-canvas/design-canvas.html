@@ -1,0 +1,33 @@
+<section class="design-canvas" aria-label="Design canvas">
+  <div
+    class="design-canvas__surface"
+    [class.design-canvas__surface--active]="isDraggingOver()"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+  >
+    @if (!hasComponents()) {
+      <div class="design-canvas__empty">
+        <p>Arrastra componentes desde el catalogo y sueltalos aqui.</p>
+      </div>
+    } @else {
+      <div class="design-canvas__layout">
+        @for (component of components(); track component.id) {
+          <article class="design-canvas__component">
+            <img
+              class="design-canvas__image"
+              [src]="imagePath(component.tag)"
+              [alt]="component.tag"
+              width="48"
+              height="48"
+            />
+            <div>
+              <p class="design-canvas__tag">{{ component.tag }}</p>
+              <span>Instancia {{ component.id }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>

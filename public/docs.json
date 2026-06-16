@@ -1,24 +1,24 @@
 {
   "components": [
     {
-      "tag": "app-alert",
+      "tag": "app-box",
       "props": [
         {
-          "name": "open",
-          "type": "boolean",
-          "default": "false",
+          "name": "text",
+          "type": "string",
+          "default": "hello world",
           "values": [
             {
-              "type": "boolean"
+              "type": "string"
             }
           ],
-          "optional": false,
+          "optional": true,
           "required": false
         }
       ],
       "events": [
         {
-          "event": "onClose"
+          "event": "boxClicked"
         }
       ]
     }
