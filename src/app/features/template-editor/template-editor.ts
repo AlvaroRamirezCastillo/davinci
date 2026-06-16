@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { ComponentCatalog } from './components/component-catalog/component-catalog';
+import { Catalog } from './components/catalog/catalog';
 import { DesignCanvas } from './components/design-canvas/design-canvas';
 
 @Component({
   selector: 'app-template-editor',
-  imports: [ComponentCatalog, DesignCanvas],
+  imports: [Catalog, DesignCanvas],
   templateUrl: './template-editor.html',
   styleUrl: './template-editor.scss',
 })

@@ -1,6 +1,7 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { AppBox } from '../../../../shared/components/app-box/app-box';
 import { AppInput } from '../../../../shared/components/app-input/app-input';
+import { ComponentDocsService } from '../../services/component-docs.service';
 import { PropertiesPanel } from './components/properties-panel/properties-panel';
 
 interface CanvasComponent {
@@ -43,6 +44,8 @@ const minRowSpan = 1;
   styleUrl: './design-canvas.scss',
 })
 export class DesignCanvas {
+  private readonly componentDocs = inject(ComponentDocsService);
+
   protected readonly gridCells = Array.from({ length: gridRows * gridColumns });
   protected readonly components = signal<CanvasComponent[]>([]);
   protected readonly isDraggingOver = signal(false);
@@ -270,19 +273,7 @@ export class DesignCanvas {
   }
 
   private defaultProperties(tag: string): CanvasComponentProperties {
-    switch (tag) {
-      case 'app-box':
-        return {
-          text: 'hello world',
-        };
-      case 'app-input':
-        return {
-          placeholder: 'Type here',
-          value: '',
-        };
-      default:
-        return {};
-    }
+    return this.componentDocs.defaultProperties(tag);
   }
 
   private gridMetrics(surface: HTMLElement): {
