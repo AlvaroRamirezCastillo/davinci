@@ -21,6 +21,40 @@
           "event": "boxClicked"
         }
       ]
+    },
+    {
+      "tag": "app-input",
+      "props": [
+        {
+          "name": "placeholder",
+          "type": "string",
+          "default": "Type here",
+          "values": [
+            {
+              "type": "string"
+            }
+          ],
+          "optional": true,
+          "required": false
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "default": "",
+          "values": [
+            {
+              "type": "string"
+            }
+          ],
+          "optional": true,
+          "required": false
+        }
+      ],
+      "events": [
+        {
+          "event": "valueChanged"
+        }
+      ]
     }
   ]
 }

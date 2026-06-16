@@ -1,5 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { AppBox } from '../../../../shared/components/app-box/app-box';
+import { AppInput } from '../../../../shared/components/app-input/app-input';
 
 interface CanvasComponent {
   id: number;
@@ -8,6 +9,16 @@ interface CanvasComponent {
   row: number;
   columnSpan: number;
   rowSpan: number;
+}
+
+interface ResizeState {
+  componentId: number;
+  startClientX: number;
+  startClientY: number;
+  startColumnSpan: number;
+  startRowSpan: number;
+  columnWidth: number;
+  rowHeight: number;
 }
 
 const componentDragType = 'application/x-picasso-component-tag';
@@ -21,7 +32,7 @@ const minRowSpan = 1;
 
 @Component({
   selector: 'app-design-canvas',
-  imports: [AppBox],
+  imports: [AppBox, AppInput],
   templateUrl: './design-canvas.html',
   styleUrl: './design-canvas.scss',
 })
@@ -32,6 +43,7 @@ export class DesignCanvas {
   protected readonly hasComponents = computed(() => this.components().length > 0);
 
   private nextId = 1;
+  private resizeState: ResizeState | null = null;
 
   protected onDragOver(event: DragEvent): void {
     if (!this.canAcceptDrop(event)) {
@@ -100,20 +112,58 @@ export class DesignCanvas {
     return `${component.row} / span ${component.rowSpan}`;
   }
 
-  protected decreaseWidth(componentId: number): void {
-    this.resizeComponent(componentId, -1);
+  protected onResizeStart(event: PointerEvent, component: CanvasComponent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const surface = (event.currentTarget as HTMLElement).closest('.design-canvas__surface') as HTMLElement | null;
+
+    if (!surface) {
+      return;
+    }
+
+    const metrics = this.gridMetrics(surface);
+    this.resizeState = {
+      componentId: component.id,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startColumnSpan: component.columnSpan,
+      startRowSpan: component.rowSpan,
+      columnWidth: metrics.columnWidth,
+      rowHeight: metrics.rowHeight,
+    };
+
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
   }
 
-  protected increaseWidth(componentId: number): void {
-    this.resizeComponent(componentId, 1);
+  protected onResizeMove(event: PointerEvent, component: CanvasComponent): void {
+    if (!this.resizeState || this.resizeState.componentId !== component.id) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const columnDelta = Math.round((event.clientX - this.resizeState.startClientX) / this.resizeState.columnWidth);
+    const rowDelta = Math.round((event.clientY - this.resizeState.startClientY) / this.resizeState.rowHeight);
+    const maxColumnSpan = gridColumns - component.column + 1;
+    const maxRowSpan = gridRows - component.row + 1;
+
+    this.setComponentSpan(
+      component.id,
+      this.clamp(this.resizeState.startColumnSpan + columnDelta, minColumnSpan, maxColumnSpan),
+      this.clamp(this.resizeState.startRowSpan + rowDelta, minRowSpan, maxRowSpan),
+    );
   }
 
-  protected decreaseHeight(componentId: number): void {
-    this.resizeComponentRows(componentId, -1);
-  }
+  protected onResizeEnd(event: PointerEvent): void {
+    if (!this.resizeState) {
+      return;
+    }
 
-  protected increaseHeight(componentId: number): void {
-    this.resizeComponentRows(componentId, 1);
+    event.preventDefault();
+    event.stopPropagation();
+    this.resizeState = null;
   }
 
   private canAcceptDrop(event: DragEvent): boolean {
@@ -128,20 +178,13 @@ export class DesignCanvas {
 
   private dropPosition(event: DragEvent): Pick<CanvasComponent, 'column' | 'row'> {
     const surface = event.currentTarget as HTMLElement;
-    const rect = surface.getBoundingClientRect();
-    const style = getComputedStyle(surface);
-    const paddingLeft = Number.parseFloat(style.paddingLeft);
-    const paddingTop = Number.parseFloat(style.paddingTop);
-    const contentWidth = rect.width - paddingLeft - Number.parseFloat(style.paddingRight);
-    const contentHeight = rect.height - paddingTop - Number.parseFloat(style.paddingBottom);
-    const columnWidth = contentWidth / gridColumns;
-    const rowHeight = contentHeight / gridRows;
-    const x = event.clientX - rect.left - paddingLeft;
-    const y = event.clientY - rect.top - paddingTop;
+    const metrics = this.gridMetrics(surface);
+    const x = event.clientX - metrics.rect.left - metrics.paddingLeft;
+    const y = event.clientY - metrics.rect.top - metrics.paddingTop;
 
     return {
-      column: this.clamp(Math.floor(x / columnWidth) + 1, 1, gridColumns),
-      row: this.clamp(Math.floor(y / rowHeight) + 1, 1, gridRows),
+      column: this.clamp(Math.floor(x / metrics.columnWidth) + 1, 1, gridColumns),
+      row: this.clamp(Math.floor(y / metrics.rowHeight) + 1, 1, gridRows),
     };
   }
 
@@ -159,7 +202,7 @@ export class DesignCanvas {
     );
   }
 
-  private resizeComponent(componentId: number, sizeDelta: number): void {
+  private setComponentSpan(componentId: number, columnSpan: number, rowSpan: number): void {
     this.components.update((components) =>
       components.map((component) => {
         if (component.id !== componentId) {
@@ -170,27 +213,34 @@ export class DesignCanvas {
 
         return {
           ...component,
-          columnSpan: this.clamp(component.columnSpan + sizeDelta, minColumnSpan, maxColumnSpan),
+          columnSpan: this.clamp(columnSpan, minColumnSpan, maxColumnSpan),
+          rowSpan: this.clamp(rowSpan, minRowSpan, gridRows - component.row + 1),
         };
       }),
     );
   }
 
-  private resizeComponentRows(componentId: number, sizeDelta: number): void {
-    this.components.update((components) =>
-      components.map((component) => {
-        if (component.id !== componentId) {
-          return component;
-        }
+  private gridMetrics(surface: HTMLElement): {
+    rect: DOMRect;
+    paddingLeft: number;
+    paddingTop: number;
+    columnWidth: number;
+    rowHeight: number;
+  } {
+    const rect = surface.getBoundingClientRect();
+    const style = getComputedStyle(surface);
+    const paddingLeft = Number.parseFloat(style.paddingLeft);
+    const paddingTop = Number.parseFloat(style.paddingTop);
+    const contentWidth = rect.width - paddingLeft - Number.parseFloat(style.paddingRight);
+    const contentHeight = rect.height - paddingTop - Number.parseFloat(style.paddingBottom);
 
-        const maxRowSpan = gridRows - component.row + 1;
-
-        return {
-          ...component,
-          rowSpan: this.clamp(component.rowSpan + sizeDelta, minRowSpan, maxRowSpan),
-        };
-      }),
-    );
+    return {
+      rect,
+      paddingLeft,
+      paddingTop,
+      columnWidth: contentWidth / gridColumns,
+      rowHeight: contentHeight / gridRows,
+    };
   }
 
   private clamp(value: number, min: number, max: number): number {

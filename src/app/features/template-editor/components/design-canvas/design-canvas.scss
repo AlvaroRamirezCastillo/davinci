@@ -90,56 +90,36 @@
   width: 100%;
 }
 
-.design-canvas__controls {
+.design-canvas__component app-input {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.design-canvas__resize-handle {
   position: absolute;
-  right: 6px;
-  bottom: 6px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  justify-content: flex-end;
-}
-
-.design-canvas__resize {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px;
-  border: 1px solid #dce3ec;
-  border-radius: 6px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(23, 32, 51, 0.08);
-}
-
-.design-canvas__resize button {
-  width: 22px;
-  height: 22px;
+  right: -6px;
+  bottom: -6px;
+  width: 16px;
+  height: 16px;
   padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background: #edf2f7;
-  color: #172033;
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  line-height: 1;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #3267d6;
+  box-shadow: 0 4px 12px rgba(23, 32, 51, 0.2);
+  cursor: nwse-resize;
+  touch-action: none;
 }
 
-.design-canvas__resize span {
-  padding-inline: 4px 2px;
-  color: #647184;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
+.design-canvas__resize-handle::before {
+  position: absolute;
+  inset: -8px;
+  content: "";
 }
 
-.design-canvas__resize strong {
-  min-width: 16px;
-  color: #647184;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-align: center;
+.design-canvas__resize-handle:focus-visible {
+  outline: 3px solid rgba(50, 103, 214, 0.24);
+  outline-offset: 2px;
 }
 
 .design-canvas__unsupported {

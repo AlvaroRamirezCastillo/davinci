@@ -32,6 +32,9 @@
             @case ('app-box') {
               <app-box />
             }
+            @case ('app-input') {
+              <app-input />
+            }
             @default {
               <div class="design-canvas__unsupported">
                 {{ component.tag }}
@@ -40,21 +43,16 @@
           }
           </div>
 
-          <div class="design-canvas__controls">
-            <div class="design-canvas__resize" aria-label="Cambiar ancho">
-              <span>Ancho</span>
-              <button type="button" title="Reducir ancho" (click)="decreaseWidth(component.id)">-</button>
-              <strong>{{ component.columnSpan }}</strong>
-              <button type="button" title="Aumentar ancho" (click)="increaseWidth(component.id)">+</button>
-            </div>
-
-            <div class="design-canvas__resize" aria-label="Cambiar alto">
-              <span>Alto</span>
-              <button type="button" title="Reducir alto" (click)="decreaseHeight(component.id)">-</button>
-              <strong>{{ component.rowSpan }}</strong>
-              <button type="button" title="Aumentar alto" (click)="increaseHeight(component.id)">+</button>
-            </div>
-          </div>
+          <button
+            class="design-canvas__resize-handle"
+            type="button"
+            title="Redimensionar"
+            aria-label="Redimensionar componente"
+            (pointerdown)="onResizeStart($event, component)"
+            (pointermove)="onResizeMove($event, component)"
+            (pointerup)="onResizeEnd($event)"
+            (pointercancel)="onResizeEnd($event)"
+          ></button>
         </div>
       }
     </div>
