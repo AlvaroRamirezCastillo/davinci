@@ -1,0 +1,26 @@
+{
+  "components": [
+    {
+      "tag": "app-alert",
+      "props": [
+        {
+          "name": "open",
+          "type": "boolean",
+          "default": "false",
+          "values": [
+            {
+              "type": "boolean"
+            }
+          ],
+          "optional": false,
+          "required": false
+        }
+      ],
+      "events": [
+        {
+          "event": "onClose"
+        }
+      ]
+    }
+  ]
+}
