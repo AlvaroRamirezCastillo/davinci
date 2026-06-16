@@ -13,19 +13,18 @@
     } @else {
       <div class="design-canvas__layout">
         @for (component of components(); track component.id) {
-          <article class="design-canvas__component">
-            <img
-              class="design-canvas__image"
-              [src]="imagePath(component.tag)"
-              [alt]="component.tag"
-              width="48"
-              height="48"
-            />
-            <div>
-              <p class="design-canvas__tag">{{ component.tag }}</p>
-              <span>Instancia {{ component.id }}</span>
-            </div>
-          </article>
+          <div class="design-canvas__component">
+            @switch (component.tag) {
+              @case ('app-box') {
+                <app-box />
+              }
+              @default {
+                <div class="design-canvas__unsupported">
+                  {{ component.tag }}
+                </div>
+              }
+            }
+          </div>
         }
       </div>
     }

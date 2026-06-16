@@ -54,39 +54,18 @@
 }
 
 .design-canvas__component {
-  display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  align-items: center;
-  gap: 12px;
-  min-height: 72px;
-  padding: 12px;
+  width: fit-content;
+}
+
+.design-canvas__unsupported {
+  min-width: 120px;
+  padding: 12px 16px;
   border: 1px solid #dce3ec;
   border-radius: 8px;
   background: #ffffff;
-  box-shadow: 0 8px 24px rgba(23, 32, 51, 0.06);
-}
-
-.design-canvas__image {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-  background: #e8edf4;
-  object-fit: contain;
-}
-
-.design-canvas__tag {
-  overflow: hidden;
-  margin: 0 0 4px;
-  color: #172033;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.design-canvas__component span {
   color: #647184;
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
 }
 
 @media (max-width: 640px) {

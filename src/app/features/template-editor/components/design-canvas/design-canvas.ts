@@ -1,4 +1,5 @@
 import { Component, computed, signal } from '@angular/core';
+import { AppBox } from '../../../../shared/components/app-box/app-box';
 
 interface CanvasComponent {
   id: number;
@@ -9,7 +10,7 @@ const componentDragType = 'application/x-picasso-component-tag';
 
 @Component({
   selector: 'app-design-canvas',
-  imports: [],
+  imports: [AppBox],
   templateUrl: './design-canvas.html',
   styleUrl: './design-canvas.scss',
 })
@@ -56,10 +57,6 @@ export class DesignCanvas {
         tag,
       },
     ]);
-  }
-
-  protected imagePath(tag: string): string {
-    return `/assets/${tag}.png`;
   }
 
   private canAcceptDrop(event: DragEvent): boolean {
