@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "picasso": {
+    "davinci": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -61,10 +61,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "picasso:build:production"
+              "buildTarget": "davinci:build:production"
             },
             "development": {
-              "buildTarget": "picasso:build:development"
+              "buildTarget": "davinci:build:development"
             }
           },
           "defaultConfiguration": "development"

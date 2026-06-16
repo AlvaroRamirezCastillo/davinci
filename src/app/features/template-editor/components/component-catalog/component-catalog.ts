@@ -9,7 +9,7 @@ interface DocsResponse {
   components: ComponentDoc[];
 }
 
-const componentDragType = 'application/x-picasso-component-tag';
+const componentDragType = 'application/x-davinci-component-tag';
 
 @Component({
   selector: 'app-component-catalog',

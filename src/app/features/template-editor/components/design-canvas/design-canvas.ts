@@ -21,8 +21,8 @@ interface ResizeState {
   rowHeight: number;
 }
 
-const componentDragType = 'application/x-picasso-component-tag';
-const componentMoveType = 'application/x-picasso-canvas-component-id';
+const componentDragType = 'application/x-davinci-component-tag';
+const componentMoveType = 'application/x-davinci-canvas-component-id';
 const gridColumns = 12;
 const gridRows = 24;
 const defaultColumnSpan = 3;
