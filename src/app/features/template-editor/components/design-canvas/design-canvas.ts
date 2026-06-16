@@ -1,6 +1,7 @@
 import { Component, computed, signal } from '@angular/core';
 import { AppBox } from '../../../../shared/components/app-box/app-box';
 import { AppInput } from '../../../../shared/components/app-input/app-input';
+import { PropertiesPanel } from './components/properties-panel/properties-panel';
 
 interface CanvasComponent {
   id: number;
@@ -9,6 +10,11 @@ interface CanvasComponent {
   row: number;
   columnSpan: number;
   rowSpan: number;
+  properties: CanvasComponentProperties;
+}
+
+export interface CanvasComponentProperties {
+  [key: string]: string;
 }
 
 interface ResizeState {
@@ -32,7 +38,7 @@ const minRowSpan = 1;
 
 @Component({
   selector: 'app-design-canvas',
-  imports: [AppBox, AppInput],
+  imports: [AppBox, AppInput, PropertiesPanel],
   templateUrl: './design-canvas.html',
   styleUrl: './design-canvas.scss',
 })
@@ -40,7 +46,11 @@ export class DesignCanvas {
   protected readonly gridCells = Array.from({ length: gridRows * gridColumns });
   protected readonly components = signal<CanvasComponent[]>([]);
   protected readonly isDraggingOver = signal(false);
+  protected readonly selectedComponentId = signal<number | null>(null);
   protected readonly hasComponents = computed(() => this.components().length > 0);
+  protected readonly selectedComponent = computed(
+    () => this.components().find((component) => component.id === this.selectedComponentId()) ?? null,
+  );
 
   private nextId = 1;
   private resizeState: ResizeState | null = null;
@@ -91,6 +101,7 @@ export class DesignCanvas {
         row: position.row,
         columnSpan: defaultColumnSpan,
         rowSpan: defaultRowSpan,
+        properties: this.defaultProperties(tag),
       },
     ]);
   }
@@ -102,6 +113,44 @@ export class DesignCanvas {
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
     }
+  }
+
+  protected onComponentDoubleClick(event: MouseEvent, component: CanvasComponent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.selectedComponentId.set(component.id);
+  }
+
+  protected onPropertiesChanged(properties: CanvasComponentProperties): void {
+    const selectedComponentId = this.selectedComponentId();
+
+    if (!selectedComponentId) {
+      return;
+    }
+
+    this.components.update((components) =>
+      components.map((component) => (component.id === selectedComponentId ? { ...component, properties } : component)),
+    );
+  }
+
+  protected onComponentPropertyChanged(componentId: number, propertyName: string, value: string): void {
+    this.components.update((components) =>
+      components.map((component) =>
+        component.id === componentId
+          ? {
+              ...component,
+              properties: {
+                ...component.properties,
+                [propertyName]: value,
+              },
+            }
+          : component,
+      ),
+    );
+  }
+
+  protected closePropertiesPanel(): void {
+    this.selectedComponentId.set(null);
   }
 
   protected componentGridColumn(component: CanvasComponent): string {
@@ -218,6 +267,22 @@ export class DesignCanvas {
         };
       }),
     );
+  }
+
+  private defaultProperties(tag: string): CanvasComponentProperties {
+    switch (tag) {
+      case 'app-box':
+        return {
+          text: 'hello world',
+        };
+      case 'app-input':
+        return {
+          placeholder: 'Type here',
+          value: '',
+        };
+      default:
+        return {};
+    }
   }
 
   private gridMetrics(surface: HTMLElement): {

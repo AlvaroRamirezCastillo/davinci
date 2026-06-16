@@ -1,0 +1,38 @@
+<aside class="properties-panel" [style.transform]="panelTransform()">
+  <header
+    class="properties-panel__header"
+    (pointerdown)="onDragStart($event)"
+    (pointermove)="onDragMove($event)"
+    (pointerup)="onDragEnd($event)"
+    (pointercancel)="onDragEnd($event)"
+  >
+    <div>
+      <p class="properties-panel__eyebrow">Propiedades</p>
+      <h2>{{ componentTag() }}</h2>
+    </div>
+
+    <button
+      class="properties-panel__close"
+      type="button"
+      title="Cerrar"
+      aria-label="Cerrar panel de propiedades"
+      (pointerdown)="$event.stopPropagation()"
+      (click)="onCloseClick($event)"
+    >
+      x
+    </button>
+  </header>
+
+  <div class="properties-panel__content">
+    @if (propertyEntries().length) {
+      @for (property of propertyEntries(); track property.key) {
+        <label class="properties-panel__field">
+          <span>{{ property.key }}</span>
+          <input [value]="property.value" (input)="onPropertyInput(property.key, $event)" />
+        </label>
+      }
+    } @else {
+      <p class="properties-panel__empty">Este componente no tiene inputs editables.</p>
+    }
+  </div>
+</aside>

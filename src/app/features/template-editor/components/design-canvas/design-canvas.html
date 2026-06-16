@@ -26,14 +26,19 @@
           [style.grid-column]="componentGridColumn(component)"
           [style.grid-row]="componentGridRow(component)"
           (dragstart)="onComponentDragStart($event, component)"
+          (dblclick)="onComponentDoubleClick($event, component)"
         >
           <div class="design-canvas__component-content">
           @switch (component.tag) {
             @case ('app-box') {
-              <app-box />
+              <app-box [text]="component.properties['text']" />
             }
             @case ('app-input') {
-              <app-input />
+              <app-input
+                [placeholder]="component.properties['placeholder']"
+                [value]="component.properties['value']"
+                (valueChanged)="onComponentPropertyChanged(component.id, 'value', $event)"
+              />
             }
             @default {
               <div class="design-canvas__unsupported">
@@ -56,5 +61,14 @@
         </div>
       }
     </div>
+
+    @if (selectedComponent(); as component) {
+      <app-properties-panel
+        [componentTag]="component.tag"
+        [properties]="component.properties"
+        (propertiesChange)="onPropertiesChanged($event)"
+        (closePanel)="closePropertiesPanel()"
+      />
+    }
   </div>
 </section>
