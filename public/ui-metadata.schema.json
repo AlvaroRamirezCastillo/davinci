@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "/ui-metadata.schema.json",
+  "title": "Davinci Server Driven UI Metadata",
+  "type": "object",
+  "required": ["schemaVersion", "layout", "dataContracts", "components"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "const": "1.0"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "layout": {
+      "type": "object",
+      "required": ["type", "columns", "rows"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "grid"
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "dataContracts": {
+      "type": "object",
+      "description": "Named data contracts available to component bindings.",
+      "additionalProperties": {
+        "$ref": "#/$defs/dataContract"
+      }
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/component"
+      }
+    }
+  },
+  "$defs": {
+    "component": {
+      "type": "object",
+      "required": ["id", "component", "layout", "props"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "layout": {
+          "$ref": "#/$defs/gridPlacement"
+        },
+        "props": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/propValue"
+          }
+        },
+        "events": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/eventBinding"
+          }
+        }
+      }
+    },
+    "gridPlacement": {
+      "type": "object",
+      "required": ["column", "row", "columnSpan", "rowSpan"],
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "columnSpan": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rowSpan": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "propValue": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/literalProp"
+        },
+        {
+          "$ref": "#/$defs/dataContractBinding"
+        }
+      ]
+    },
+    "literalProp": {
+      "type": "object",
+      "required": ["kind", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "literal"
+        },
+        "value": {
+          "type": ["string", "number", "integer", "boolean", "null", "array", "object"]
+        }
+      }
+    },
+    "dataContractBinding": {
+      "type": "object",
+      "required": ["kind", "contract", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "dataContract"
+        },
+        "contract": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "description": "Path inside the contract response. Example: $.countries"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["value", "items", "options"],
+          "default": "value"
+        },
+        "itemLabelPath": {
+          "type": "string",
+          "description": "Path inside each item used as the visible label. Example: $.name"
+        },
+        "itemValuePath": {
+          "type": "string",
+          "description": "Path inside each item used as the submitted value. Example: $.id"
+        }
+      }
+    },
+    "dataContract": {
+      "type": "object",
+      "required": ["id", "source"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/httpSource"
+            },
+            {
+              "$ref": "#/$defs/staticSource"
+            },
+            {
+              "$ref": "#/$defs/contextSource"
+            }
+          ]
+        },
+        "schema": {
+          "type": "object"
+        }
+      }
+    },
+    "httpSource": {
+      "type": "object",
+      "required": ["kind", "url"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "http"
+        },
+        "url": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+          "default": "GET"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "staticSource": {
+      "type": "object",
+      "required": ["kind", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "static"
+        },
+        "value": {}
+      }
+    },
+    "contextSource": {
+      "type": "object",
+      "required": ["kind", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "context"
+        },
+        "path": {
+          "type": "string"
+        }
+      }
+    },
+    "eventBinding": {
+      "type": "object",
+      "required": ["action"],
+      "additionalProperties": true,
+      "properties": {
+        "action": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

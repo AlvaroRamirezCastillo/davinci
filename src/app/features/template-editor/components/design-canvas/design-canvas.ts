@@ -17,6 +17,35 @@ export interface CanvasComponentProperties {
   [key: string]: string;
 }
 
+export interface UiMetadata {
+  schemaVersion: '1.0';
+  generatedAt: string;
+  layout: {
+    type: 'grid';
+    columns: number;
+    rows: number;
+  };
+  dataContracts: Record<string, unknown>;
+  components: UiComponentMetadata[];
+}
+
+export interface UiComponentMetadata {
+  id: string;
+  component: string;
+  layout: {
+    column: number;
+    row: number;
+    columnSpan: number;
+    rowSpan: number;
+  };
+  props: Record<string, UiLiteralPropMetadata>;
+}
+
+export interface UiLiteralPropMetadata {
+  kind: 'literal';
+  value: string;
+}
+
 interface ResizeState {
   componentId: number;
   startClientX: number;
@@ -115,6 +144,30 @@ export class DesignCanvas {
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
     }
+  }
+
+  generateMetadata(): UiMetadata {
+    return {
+      schemaVersion: '1.0',
+      generatedAt: new Date().toISOString(),
+      layout: {
+        type: 'grid',
+        columns: gridColumns,
+        rows: gridRows,
+      },
+      dataContracts: {},
+      components: this.components().map((component) => ({
+        id: `cmp-${component.id}`,
+        component: component.tag,
+        layout: {
+          column: component.column,
+          row: component.row,
+          columnSpan: component.columnSpan,
+          rowSpan: component.rowSpan,
+        },
+        props: this.serializeProperties(component.properties),
+      })),
+    };
   }
 
   protected onEditPropertiesClick(event: MouseEvent, component: CanvasComponent): void {
@@ -284,6 +337,17 @@ export class DesignCanvas {
 
   private defaultProperties(tag: string): CanvasComponentProperties {
     return this.componentDocs.defaultProperties(tag);
+  }
+
+  private serializeProperties(properties: CanvasComponentProperties): Record<string, UiLiteralPropMetadata> {
+    return Object.entries(properties).reduce<Record<string, UiLiteralPropMetadata>>((metadata, [propertyName, value]) => {
+      metadata[propertyName] = {
+        kind: 'literal',
+        value,
+      };
+
+      return metadata;
+    }, {});
   }
 
   private gridMetrics(surface: HTMLElement): {

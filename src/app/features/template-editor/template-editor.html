@@ -2,6 +2,18 @@
   <app-catalog />
 
   <section class="template-editor__workspace" aria-label="Template editor workspace">
+    <header class="template-editor__toolbar">
+      <button class="template-editor__metadata-button" type="button" (click)="generateMetadata()">
+        Generar metadata
+      </button>
+    </header>
+
     <app-design-canvas />
+
+    @if (hasGeneratedMetadata()) {
+      <section class="template-editor__metadata" aria-label="Metadata generada">
+        <textarea readonly [value]="generatedMetadata()"></textarea>
+      </section>
+    }
   </section>
 </main>

@@ -15,11 +15,71 @@
 }
 
 .template-editor__workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 16px;
   height: 100%;
   min-width: 0;
   align-self: start;
   padding: 32px;
   overflow: hidden;
+}
+
+.template-editor__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.template-editor__metadata-button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #2557bd;
+  border-radius: 6px;
+  background: #3267d6;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+.template-editor__metadata-button:hover {
+  background: #2557bd;
+  box-shadow: 0 8px 20px rgba(50, 103, 214, 0.22);
+  transform: translateY(-1px);
+}
+
+.template-editor__metadata-button:active {
+  transform: translateY(0);
+}
+
+.template-editor__metadata-button:focus-visible {
+  outline: 3px solid rgba(50, 103, 214, 0.24);
+  outline-offset: 2px;
+}
+
+.template-editor__metadata {
+  min-height: 160px;
+  max-height: 280px;
+  overflow: hidden;
+}
+
+.template-editor__metadata textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid #cfd8e5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172033;
+  font: 0.8125rem/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 @media (max-width: 800px) {
