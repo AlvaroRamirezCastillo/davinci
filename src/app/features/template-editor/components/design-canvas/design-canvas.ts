@@ -56,6 +56,14 @@ interface ResizeState {
   rowPitch: number;
 }
 
+interface DropPreview {
+  column: number;
+  row: number;
+  columnSpan: number;
+  rowSpan: number;
+  componentId: number | null;
+}
+
 const componentDragType = 'application/x-davinci-component-tag';
 const componentMoveType = 'application/x-davinci-canvas-component-id';
 const gridColumns = 12;
@@ -77,6 +85,8 @@ export class DesignCanvas {
   protected readonly gridCells = Array.from({ length: gridRows * gridColumns });
   protected readonly components = signal<CanvasComponent[]>([]);
   protected readonly isDraggingOver = signal(false);
+  protected readonly dropPreview = signal<DropPreview | null>(null);
+  protected readonly draggingComponentId = signal<number | null>(null);
   protected readonly selectedComponentId = signal<number | null>(null);
   protected readonly hasComponents = computed(() => this.components().length > 0);
   protected readonly selectedComponent = computed(
@@ -94,6 +104,7 @@ export class DesignCanvas {
     event.preventDefault();
     event.dataTransfer!.dropEffect = this.isMove(event) ? 'move' : 'copy';
     this.isDraggingOver.set(true);
+    this.dropPreview.set(this.previewFromEvent(event));
   }
 
   protected onDragLeave(event: DragEvent): void {
@@ -101,25 +112,27 @@ export class DesignCanvas {
     const relatedTarget = event.relatedTarget as Node | null;
 
     if (!currentTarget?.contains(relatedTarget)) {
-      this.isDraggingOver.set(false);
+      this.clearDragState();
     }
   }
 
   protected onDrop(event: DragEvent): void {
     event.preventDefault();
-    this.isDraggingOver.set(false);
 
-    const position = this.dropPosition(event);
+    const preview = this.dropPreview();
+    const position = preview ?? this.dropPosition(event);
     const movedComponentId = Number(event.dataTransfer?.getData(componentMoveType));
 
     if (movedComponentId) {
       this.moveComponent(movedComponentId, position.column, position.row);
+      this.clearDragState();
       return;
     }
 
     const tag = event.dataTransfer?.getData(componentDragType) || event.dataTransfer?.getData('text/plain');
 
     if (!tag) {
+      this.clearDragState();
       return;
     }
 
@@ -135,15 +148,21 @@ export class DesignCanvas {
         properties: this.defaultProperties(tag),
       },
     ]);
+    this.clearDragState();
   }
 
   protected onComponentDragStart(event: DragEvent, component: CanvasComponent): void {
     event.stopPropagation();
     event.dataTransfer?.setData(componentMoveType, String(component.id));
+    this.draggingComponentId.set(component.id);
 
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = 'move';
     }
+  }
+
+  protected onComponentDragEnd(): void {
+    this.clearDragState();
   }
 
   generateMetadata(): UiMetadata {
@@ -227,6 +246,14 @@ export class DesignCanvas {
     return `${component.row} / span ${component.rowSpan}`;
   }
 
+  protected previewGridColumn(preview: DropPreview): string {
+    return `${preview.column} / span ${preview.columnSpan}`;
+  }
+
+  protected previewGridRow(preview: DropPreview): string {
+    return `${preview.row} / span ${preview.rowSpan}`;
+  }
+
   protected onResizeStart(event: PointerEvent, component: CanvasComponent): void {
     event.preventDefault();
     event.stopPropagation();
@@ -292,14 +319,39 @@ export class DesignCanvas {
   }
 
   private dropPosition(event: DragEvent): Pick<CanvasComponent, 'column' | 'row'> {
+    return this.dropPositionForSpan(event, defaultColumnSpan, defaultRowSpan);
+  }
+
+  private previewFromEvent(event: DragEvent): DropPreview {
+    const movedComponentId = this.draggingComponentId() ?? Number(event.dataTransfer?.getData(componentMoveType));
+    const movedComponent = movedComponentId
+      ? this.components().find((component) => component.id === movedComponentId) ?? null
+      : null;
+    const columnSpan = movedComponent?.columnSpan ?? defaultColumnSpan;
+    const rowSpan = movedComponent?.rowSpan ?? defaultRowSpan;
+    const position = this.dropPositionForSpan(event, columnSpan, rowSpan);
+
+    return {
+      ...position,
+      columnSpan,
+      rowSpan,
+      componentId: movedComponent?.id ?? null,
+    };
+  }
+
+  private dropPositionForSpan(
+    event: DragEvent,
+    columnSpan: number,
+    rowSpan: number,
+  ): Pick<CanvasComponent, 'column' | 'row'> {
     const surface = event.currentTarget as HTMLElement;
     const metrics = this.gridMetrics(surface);
     const x = event.clientX - metrics.rect.left - metrics.paddingLeft;
     const y = event.clientY - metrics.rect.top - metrics.paddingTop;
 
     return {
-      column: this.clamp(Math.floor(x / metrics.columnWidth) + 1, 1, gridColumns),
-      row: this.clamp(Math.floor(y / metrics.rowHeight) + 1, 1, gridRows),
+      column: this.clamp(Math.floor(x / metrics.columnPitch) + 1, 1, gridColumns - columnSpan + 1),
+      row: this.clamp(Math.floor(y / metrics.rowPitch) + 1, 1, gridRows - rowSpan + 1),
     };
   }
 
@@ -385,5 +437,11 @@ export class DesignCanvas {
 
   private clamp(value: number, min: number, max: number): number {
     return Math.min(Math.max(value, min), max);
+  }
+
+  private clearDragState(): void {
+    this.isDraggingOver.set(false);
+    this.dropPreview.set(null);
+    this.draggingComponentId.set(null);
   }
 }

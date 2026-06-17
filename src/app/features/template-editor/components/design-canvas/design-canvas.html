@@ -19,14 +19,38 @@
     }
 
     <div class="design-canvas__layout">
+      @if (dropPreview(); as preview) {
+        <div
+          class="design-canvas__drop-preview"
+          [style.grid-column]="previewGridColumn(preview)"
+          [style.grid-row]="previewGridRow(preview)"
+          aria-hidden="true"
+        ></div>
+      }
+
       @for (component of components(); track component.id) {
         <div
           class="design-canvas__component"
+          [class.design-canvas__component--moving]="draggingComponentId() === component.id"
           draggable="true"
           [style.grid-column]="componentGridColumn(component)"
           [style.grid-row]="componentGridRow(component)"
           (dragstart)="onComponentDragStart($event, component)"
+          (dragend)="onComponentDragEnd()"
         >
+          <button
+            class="design-canvas__drag-button"
+            type="button"
+            draggable="true"
+            title="Mover componente"
+            aria-label="Mover componente"
+            (dragstart)="onComponentDragStart($event, component)"
+            (dragend)="onComponentDragEnd()"
+            (pointerdown)="$event.stopPropagation()"
+          >
+            <span aria-hidden="true"></span>
+          </button>
+
           <div class="design-canvas__component-content">
             <app-canvas-component-renderer
               [tag]="component.tag"

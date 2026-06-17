@@ -57,6 +57,31 @@
   pointer-events: none;
 }
 
+.design-canvas__drop-preview {
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  border: 2px solid #1d6fd6;
+  border-radius: 7px;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      rgba(29, 111, 214, 0.16) 0,
+      rgba(29, 111, 214, 0.16) 8px,
+      rgba(29, 111, 214, 0.08) 8px,
+      rgba(29, 111, 214, 0.08) 16px
+    ),
+    rgba(29, 111, 214, 0.08);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.78),
+    0 10px 24px rgba(29, 111, 214, 0.16);
+  pointer-events: none;
+  transition:
+    background-color 90ms ease,
+    border-color 90ms ease,
+    box-shadow 90ms ease;
+}
+
 .design-canvas__grid {
   position: absolute;
   inset: 24px;
@@ -74,6 +99,7 @@
 
 .design-canvas__component {
   position: relative;
+  z-index: 2;
   align-self: stretch;
   min-width: 0;
   min-height: 0;
@@ -82,11 +108,29 @@
   border-radius: 6px;
   background: rgba(50, 103, 214, 0.04);
   pointer-events: auto;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease,
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+
+.design-canvas__component:hover {
+  border-color: rgba(29, 111, 214, 0.62);
+  background: rgba(29, 111, 214, 0.07);
+  box-shadow: 0 8px 20px rgba(23, 32, 51, 0.08);
+}
+
+.design-canvas__component--moving {
+  opacity: 0.42;
+  transform: scale(0.985);
+  border-color: rgba(29, 111, 214, 0.9);
+  background: rgba(29, 111, 214, 0.12);
 }
 
 .design-canvas__component-content {
   width: 100%;
-  cursor: move;
 }
 
 .design-canvas__component stl-box,
@@ -101,6 +145,7 @@
   width: 100%;
 }
 
+.design-canvas__drag-button,
 .design-canvas__edit-button,
 .design-canvas__delete-button {
   position: absolute;
@@ -124,6 +169,55 @@
     background-color 120ms ease,
     box-shadow 120ms ease,
     transform 120ms ease;
+}
+
+.design-canvas__drag-button {
+  top: -12px;
+  left: 50%;
+  width: 34px;
+  height: 24px;
+  border-radius: 999px;
+  background: #1d6fd6;
+  cursor: grab;
+  transform: translateX(-50%);
+}
+
+.design-canvas__drag-button span,
+.design-canvas__drag-button span::before,
+.design-canvas__drag-button span::after {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+
+.design-canvas__drag-button span {
+  position: relative;
+}
+
+.design-canvas__drag-button span::before,
+.design-canvas__drag-button span::after {
+  position: absolute;
+  top: 0;
+}
+
+.design-canvas__drag-button span::before {
+  left: -8px;
+}
+
+.design-canvas__drag-button span::after {
+  right: -8px;
+}
+
+.design-canvas__drag-button:hover {
+  background: #155cb4;
+  box-shadow: 0 6px 16px rgba(23, 32, 51, 0.24);
+}
+
+.design-canvas__drag-button:active {
+  cursor: grabbing;
 }
 
 .design-canvas__edit-button svg,
@@ -157,6 +251,7 @@
   transform: translateY(0);
 }
 
+.design-canvas__drag-button:focus-visible,
 .design-canvas__edit-button:focus-visible,
 .design-canvas__delete-button:focus-visible {
   outline: 3px solid rgba(50, 103, 214, 0.24);
