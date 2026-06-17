@@ -27,6 +27,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "node_modules/stl-components/dist/docs.json",
+                "input": ".",
+                "output": "public"
               }
             ],
             "styles": [
