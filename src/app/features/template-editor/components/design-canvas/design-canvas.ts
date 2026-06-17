@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { AppBox } from '../../../../shared/components/app-box/app-box';
-import { AppInput } from '../../../../shared/components/app-input/app-input';
 import { ComponentDocsService } from '../../services/component-docs.service';
+import { CanvasComponentRenderer } from './components/canvas-component-renderer/canvas-component-renderer';
 import { PropertiesPanel } from './components/properties-panel/properties-panel';
 
 interface CanvasComponent {
@@ -39,7 +38,7 @@ const minRowSpan = 1;
 
 @Component({
   selector: 'app-design-canvas',
-  imports: [AppBox, AppInput, PropertiesPanel],
+  imports: [CanvasComponentRenderer, PropertiesPanel],
   templateUrl: './design-canvas.html',
   styleUrl: './design-canvas.scss',
 })

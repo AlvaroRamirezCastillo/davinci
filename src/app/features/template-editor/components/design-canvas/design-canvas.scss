@@ -115,6 +115,15 @@
   font-size: 0.875rem;
   line-height: 1;
   touch-action: none;
+  transition:
+    background-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+.design-canvas__edit-button svg,
+.design-canvas__delete-button svg {
+  display: block;
 }
 
 .design-canvas__edit-button {
@@ -128,10 +137,19 @@
 
 .design-canvas__edit-button:hover {
   background: #3267d6;
+  box-shadow: 0 6px 16px rgba(23, 32, 51, 0.24);
+  transform: translateY(-1px);
 }
 
 .design-canvas__delete-button:hover {
   background: #a92d2d;
+  box-shadow: 0 6px 16px rgba(23, 32, 51, 0.24);
+  transform: translateY(-1px);
+}
+
+.design-canvas__edit-button:active,
+.design-canvas__delete-button:active {
+  transform: translateY(0);
 }
 
 .design-canvas__edit-button:focus-visible,

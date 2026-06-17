@@ -1,0 +1,14 @@
+:host {
+  display: contents;
+}
+
+.canvas-component-renderer__unsupported {
+  min-width: 120px;
+  padding: 12px 16px;
+  border: 1px solid #dce3ec;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #647184;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
