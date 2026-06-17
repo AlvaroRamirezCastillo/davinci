@@ -26,7 +26,6 @@
           [style.grid-column]="componentGridColumn(component)"
           [style.grid-row]="componentGridRow(component)"
           (dragstart)="onComponentDragStart($event, component)"
-          (dblclick)="onComponentDoubleClick($event, component)"
         >
           <div class="design-canvas__component-content">
           @switch (component.tag) {
@@ -47,6 +46,28 @@
             }
           }
           </div>
+
+          <button
+            class="design-canvas__edit-button"
+            type="button"
+            title="Editar propiedades"
+            aria-label="Editar propiedades del componente"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="onEditPropertiesClick($event, component)"
+          >
+            ✎
+          </button>
+
+          <button
+            class="design-canvas__delete-button"
+            type="button"
+            title="Eliminar componente"
+            aria-label="Eliminar componente"
+            (pointerdown)="$event.stopPropagation()"
+            (click)="onDeleteComponentClick($event, component)"
+          >
+            🗑️
+          </button>
 
           <button
             class="design-canvas__resize-handle"

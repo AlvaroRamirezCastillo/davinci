@@ -96,6 +96,50 @@
   height: 100%;
 }
 
+.design-canvas__edit-button,
+.design-canvas__delete-button {
+  position: absolute;
+  top: -6px;
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  place-items: center;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: #172033;
+  box-shadow: 0 4px 12px rgba(23, 32, 51, 0.2);
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1;
+  touch-action: none;
+}
+
+.design-canvas__edit-button {
+  right: -6px;
+}
+
+.design-canvas__delete-button {
+  left: -6px;
+  background: #c73535;
+}
+
+.design-canvas__edit-button:hover {
+  background: #3267d6;
+}
+
+.design-canvas__delete-button:hover {
+  background: #a92d2d;
+}
+
+.design-canvas__edit-button:focus-visible,
+.design-canvas__delete-button:focus-visible {
+  outline: 3px solid rgba(50, 103, 214, 0.24);
+  outline-offset: 2px;
+}
+
 .design-canvas__resize-handle {
   position: absolute;
   right: -6px;

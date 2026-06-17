@@ -118,10 +118,21 @@ export class DesignCanvas {
     }
   }
 
-  protected onComponentDoubleClick(event: MouseEvent, component: CanvasComponent): void {
+  protected onEditPropertiesClick(event: MouseEvent, component: CanvasComponent): void {
     event.preventDefault();
     event.stopPropagation();
     this.selectedComponentId.set(component.id);
+  }
+
+  protected onDeleteComponentClick(event: MouseEvent, component: CanvasComponent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.components.update((components) => components.filter((currentComponent) => currentComponent.id !== component.id));
+
+    if (this.selectedComponentId() === component.id) {
+      this.closePropertiesPanel();
+    }
   }
 
   protected onPropertiesChanged(properties: CanvasComponentProperties): void {
