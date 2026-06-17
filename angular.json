@@ -29,9 +29,9 @@
                 "input": "public"
               },
               {
-                "glob": "node_modules/stl-components/dist/docs.json",
-                "input": ".",
-                "output": "public"
+                "glob": "docs.json",
+                "input": "node_modules/stl-components/dist",
+                "output": "/"
               }
             ],
             "styles": [

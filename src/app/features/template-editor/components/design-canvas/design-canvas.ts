@@ -52,8 +52,8 @@ interface ResizeState {
   startClientY: number;
   startColumnSpan: number;
   startRowSpan: number;
-  columnWidth: number;
-  rowHeight: number;
+  columnPitch: number;
+  rowPitch: number;
 }
 
 const componentDragType = 'application/x-davinci-component-tag';
@@ -244,8 +244,8 @@ export class DesignCanvas {
       startClientY: event.clientY,
       startColumnSpan: component.columnSpan,
       startRowSpan: component.rowSpan,
-      columnWidth: metrics.columnWidth,
-      rowHeight: metrics.rowHeight,
+      columnPitch: metrics.columnPitch,
+      rowPitch: metrics.rowPitch,
     };
 
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
@@ -259,8 +259,8 @@ export class DesignCanvas {
     event.preventDefault();
     event.stopPropagation();
 
-    const columnDelta = Math.round((event.clientX - this.resizeState.startClientX) / this.resizeState.columnWidth);
-    const rowDelta = Math.round((event.clientY - this.resizeState.startClientY) / this.resizeState.rowHeight);
+    const columnDelta = Math.round((event.clientX - this.resizeState.startClientX) / this.resizeState.columnPitch);
+    const rowDelta = Math.round((event.clientY - this.resizeState.startClientY) / this.resizeState.rowPitch);
     const maxColumnSpan = gridColumns - component.column + 1;
     const maxRowSpan = gridRows - component.row + 1;
 
@@ -356,20 +356,30 @@ export class DesignCanvas {
     paddingTop: number;
     columnWidth: number;
     rowHeight: number;
+    columnPitch: number;
+    rowPitch: number;
   } {
     const rect = surface.getBoundingClientRect();
     const style = getComputedStyle(surface);
+    const layout = surface.querySelector<HTMLElement>('.design-canvas__layout');
+    const layoutStyle = layout ? getComputedStyle(layout) : style;
     const paddingLeft = Number.parseFloat(style.paddingLeft);
     const paddingTop = Number.parseFloat(style.paddingTop);
+    const columnGap = Number.parseFloat(layoutStyle.columnGap) || 0;
+    const rowGap = Number.parseFloat(layoutStyle.rowGap) || 0;
     const contentWidth = rect.width - paddingLeft - Number.parseFloat(style.paddingRight);
     const contentHeight = rect.height - paddingTop - Number.parseFloat(style.paddingBottom);
+    const columnWidth = (contentWidth - columnGap * (gridColumns - 1)) / gridColumns;
+    const rowHeight = Math.max(28, (contentHeight - rowGap * (gridRows - 1)) / gridRows);
 
     return {
       rect,
       paddingLeft,
       paddingTop,
-      columnWidth: contentWidth / gridColumns,
-      rowHeight: contentHeight / gridRows,
+      columnWidth,
+      rowHeight,
+      columnPitch: columnWidth + columnGap,
+      rowPitch: rowHeight + rowGap,
     };
   }
 

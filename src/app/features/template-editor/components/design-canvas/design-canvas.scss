@@ -77,23 +77,28 @@
   align-self: stretch;
   min-width: 0;
   min-height: 0;
+  padding: 6px;
+  border: 1px dashed rgba(50, 103, 214, 0.34);
+  border-radius: 6px;
+  background: rgba(50, 103, 214, 0.04);
   pointer-events: auto;
 }
 
 .design-canvas__component-content {
-  height: 100%;
+  width: 100%;
   cursor: move;
 }
 
-.design-canvas__component app-box {
+.design-canvas__component stl-box,
+.design-canvas__component stl-button,
+.design-canvas__component stl-select {
   display: block;
   width: 100%;
 }
 
-.design-canvas__component app-input {
+.design-canvas__component stl-input {
   display: block;
   width: 100%;
-  height: 100%;
 }
 
 .design-canvas__edit-button,

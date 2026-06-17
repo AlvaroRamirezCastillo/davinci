@@ -41,17 +41,32 @@ export class ComponentDocsService {
     });
   }
 
+  component(tag: string): ComponentDoc | null {
+    return this.components().find((component) => component.tag === tag) ?? null;
+  }
+
   defaultProperties(tag: string): Record<string, string> {
-    const componentDoc = this.components().find((component) => component.tag === tag);
+    const componentDoc = this.component(tag);
 
     if (!componentDoc?.props?.length) {
       return {};
     }
 
     return componentDoc.props.reduce<Record<string, string>>((properties, prop) => {
-      properties[prop.name] = prop.default === undefined || prop.default === null ? '' : String(prop.default);
+      properties[prop.name] = this.defaultValue(prop.default);
 
       return properties;
     }, {});
+  }
+
+  private defaultValue(value: unknown): string {
+    if (value === undefined || value === null) {
+      return '';
+    }
+
+    const stringValue = String(value);
+    const quotedStringMatch = stringValue.match(/^(['"])(.*)\1$/);
+
+    return quotedStringMatch?.[2] ?? stringValue;
   }
 }

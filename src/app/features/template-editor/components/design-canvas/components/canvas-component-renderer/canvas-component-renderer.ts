@@ -1,13 +1,10 @@
 import {
   Component,
-  ComponentRef,
   effect,
-  EnvironmentInjector,
   inject,
   input,
   OnDestroy,
   output,
-  untracked,
   viewChild,
   ViewContainerRef,
 } from '@angular/core';
@@ -22,17 +19,16 @@ import type { CanvasComponentProperties } from '../../design-canvas';
 })
 export class CanvasComponentRenderer implements OnDestroy {
   private readonly componentRegistry = inject(ComponentRegistryService);
-  private readonly environmentInjector = inject(EnvironmentInjector);
   private readonly viewContainer = viewChild('componentHost', { read: ViewContainerRef });
 
   readonly tag = input.required<string>();
   readonly properties = input.required<CanvasComponentProperties>();
   readonly propertyChange = output<{ propertyName: string; value: string }>();
 
-  private componentRef: ComponentRef<unknown> | null = null;
+  private element: HTMLElement | null = null;
   private renderedTag: string | null = null;
   private unsupportedElement: HTMLElement | null = null;
-  private outputSubscriptions: Array<{ unsubscribe: () => void }> = [];
+  private outputSubscriptions: Array<() => void> = [];
 
   constructor() {
     effect(() => {
@@ -44,23 +40,25 @@ export class CanvasComponentRenderer implements OnDestroy {
         return;
       }
 
-      untracked(() => {
-        const didRender = this.renderComponent(tag);
-        this.applyInputs(properties);
+      const didRender = this.renderComponent(tag);
+      this.applyInputs(properties);
 
-        if (didRender) {
-          this.bindOutputs(properties);
-        }
-      });
+      if (didRender) {
+        this.bindOutputs(properties);
+      }
     });
   }
 
   ngOnDestroy(): void {
     this.clearOutputSubscriptions();
+    this.clearUnsupportedElement();
+    this.clearElement();
   }
 
   private renderComponent(tag: string): boolean {
-    if (this.renderedTag === tag) {
+    const componentDoc = this.componentRegistry.getComponent(tag);
+
+    if (this.renderedTag === tag && (this.element || !componentDoc)) {
       return false;
     }
 
@@ -70,15 +68,14 @@ export class CanvasComponentRenderer implements OnDestroy {
       return false;
     }
 
-    const componentType = this.componentRegistry.getComponent(tag);
-
     this.clearOutputSubscriptions();
     this.clearUnsupportedElement();
+    this.clearElement();
     viewContainer.clear();
-    this.componentRef = null;
+    this.element = null;
     this.renderedTag = tag;
 
-    if (!componentType) {
+    if (!componentDoc) {
       const unsupportedElement = document.createElement('div');
       unsupportedElement.className = 'canvas-component-renderer__unsupported';
       unsupportedElement.textContent = tag;
@@ -87,50 +84,55 @@ export class CanvasComponentRenderer implements OnDestroy {
       return true;
     }
 
-    this.componentRef = viewContainer.createComponent(componentType, {
-      environmentInjector: this.environmentInjector,
-    });
+    const element = document.createElement(componentDoc.tag);
+    element.classList.add('canvas-component-renderer__element');
+    this.element = element;
+    viewContainer.element.nativeElement.parentElement?.appendChild(element);
 
     return true;
   }
 
   private applyInputs(properties: CanvasComponentProperties): void {
-    if (!this.componentRef) {
+    if (!this.element) {
       return;
     }
 
     for (const [propertyName, value] of Object.entries(properties)) {
-      this.componentRef.setInput(propertyName, value);
+      (this.element as unknown as Record<string, unknown>)[propertyName] = value;
+      this.element.setAttribute(this.toKebabCase(propertyName), value);
     }
   }
 
   private bindOutputs(properties: CanvasComponentProperties): void {
-    if (!this.componentRef) {
+    if (!this.element) {
       return;
     }
 
     for (const propertyName of Object.keys(properties)) {
-      const outputName = `${propertyName}Changed`;
-      const outputRef = (this.componentRef.instance as Record<string, unknown>)[outputName];
+      const eventNames = [`${propertyName}Changed`, `${propertyName}Change`];
 
-      if (!this.isSubscribableOutput(outputRef)) {
-        continue;
+      if (propertyName === 'value') {
+        eventNames.push('change', 'input');
       }
 
-      this.outputSubscriptions.push(
-        outputRef.subscribe((value: unknown) => {
+      for (const eventName of eventNames) {
+        const listener = (event: Event) => {
+          const value = this.eventValue(event, propertyName);
           this.propertyChange.emit({
             propertyName,
-            value: value === undefined || value === null ? '' : String(value),
+            value,
           });
-        }),
-      );
+        };
+
+        this.element.addEventListener(eventName, listener);
+        this.outputSubscriptions.push(() => this.element?.removeEventListener(eventName, listener));
+      }
     }
   }
 
   private clearOutputSubscriptions(): void {
-    for (const subscription of this.outputSubscriptions) {
-      subscription.unsubscribe();
+    for (const unsubscribe of this.outputSubscriptions) {
+      unsubscribe();
     }
 
     this.outputSubscriptions = [];
@@ -141,12 +143,31 @@ export class CanvasComponentRenderer implements OnDestroy {
     this.unsupportedElement = null;
   }
 
-  private isSubscribableOutput(outputRef: unknown): outputRef is { subscribe: (callback: (value: unknown) => void) => { unsubscribe: () => void } } {
-    return (
-      typeof outputRef === 'object' &&
-      outputRef !== null &&
-      'subscribe' in outputRef &&
-      typeof (outputRef as { subscribe: unknown }).subscribe === 'function'
-    );
+  private clearElement(): void {
+    this.element?.remove();
+    this.element = null;
+  }
+
+  private eventValue(event: Event, propertyName: string): string {
+    const customEvent = event as CustomEvent<unknown>;
+    const detail = customEvent.detail;
+
+    if (detail && typeof detail === 'object' && propertyName in detail) {
+      const value = (detail as Record<string, unknown>)[propertyName];
+
+      return value === undefined || value === null ? '' : String(value);
+    }
+
+    if (detail !== undefined && detail !== null && typeof detail !== 'object') {
+      return String(detail);
+    }
+
+    const targetValue = (event.target as { value?: unknown } | null)?.value;
+
+    return targetValue === undefined || targetValue === null ? '' : String(targetValue);
+  }
+
+  private toKebabCase(value: string): string {
+    return value.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
   }
 }

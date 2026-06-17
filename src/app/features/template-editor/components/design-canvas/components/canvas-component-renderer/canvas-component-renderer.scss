@@ -1,5 +1,13 @@
 :host {
-  display: contents;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+:host > .canvas-component-renderer__element {
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
 .canvas-component-renderer__unsupported {

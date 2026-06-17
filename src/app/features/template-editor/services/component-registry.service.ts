@@ -1,17 +1,13 @@
-import { Injectable, Type } from '@angular/core';
-import { AppBox } from '../../../shared/components/app-box/app-box';
-import { AppInput } from '../../../shared/components/app-input/app-input';
+import { Injectable, inject } from '@angular/core';
+import { ComponentDoc, ComponentDocsService } from './component-docs.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ComponentRegistryService {
-  private readonly components = new Map<string, Type<unknown>>([
-    ['app-box', AppBox],
-    ['app-input', AppInput],
-  ]);
+  private readonly componentDocs = inject(ComponentDocsService);
 
-  getComponent(tag: string): Type<unknown> | null {
-    return this.components.get(tag) ?? null;
+  getComponent(tag: string): ComponentDoc | null {
+    return this.componentDocs.component(tag);
   }
 }
