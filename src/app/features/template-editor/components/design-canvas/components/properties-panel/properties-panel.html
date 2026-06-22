@@ -24,15 +24,81 @@
   </header>
 
   <div class="properties-panel__content">
-    @if (propertyEntries().length) {
-      @for (property of propertyEntries(); track property.key) {
-        <label class="properties-panel__field">
-          <span>{{ property.key }}</span>
-          <input [value]="property.value" (input)="onPropertyInput(property.key, $event)" />
-        </label>
+    <section class="properties-panel__section">
+      <div class="properties-panel__section-heading">
+        <h3>Data context</h3>
+        <span>{{ dataContextPaths().length }}</span>
+      </div>
+
+      <label class="properties-panel__field">
+        <span>Data de la vista (JSON)</span>
+        <textarea
+          rows="8"
+          spellcheck="false"
+          [value]="dataContextDraft()"
+          (input)="onDataContextInput($event)"
+        ></textarea>
+      </label>
+
+      @if (dataContextError()) {
+        <p class="properties-panel__error">{{ dataContextError() }}</p>
+      } @else {
+        <p class="properties-panel__hint">
+          Las rutas de este objeto estarán disponibles para mapearlas a los componentes.
+        </p>
       }
-    } @else {
-      <p class="properties-panel__empty">Este componente no tiene inputs editables.</p>
-    }
+    </section>
+
+    <section class="properties-panel__section">
+      <div class="properties-panel__section-heading">
+        <h3>Mapping de propiedades</h3>
+      </div>
+
+      @if (propertyEntries().length) {
+        @for (property of propertyEntries(); track property.name) {
+          <div class="properties-panel__property">
+            <div class="properties-panel__property-heading">{{ property.name }}</div>
+
+            <label class="properties-panel__field">
+              <span>Origen</span>
+              <select
+                [value]="propertySource(property.name)"
+                (change)="onPropertySourceChange(property.name, $event)"
+              >
+                <option value="literal">Valor literal</option>
+                <option value="dataContext" [disabled]="!dataContextPaths().length">
+                  Data context
+                </option>
+              </select>
+            </label>
+
+            @if (property.binding) {
+              <label class="properties-panel__field">
+                <span>Ruta del data context</span>
+                <select
+                  [value]="selectedPath(property.name)"
+                  (change)="onBindingPathChange(property.name, $event)"
+                >
+                  @for (dataPath of dataContextPaths(); track dataPath.path) {
+                    <option [value]="dataPath.path">
+                      {{ dataPath.path }} — {{ pathValuePreview(dataPath) }}
+                    </option>
+                  }
+                </select>
+              </label>
+
+              <code class="properties-panel__binding">{{ bindingPreview(property.name) }}</code>
+            } @else {
+              <label class="properties-panel__field">
+                <span>Valor</span>
+                <input [value]="property.value" (input)="onPropertyInput(property.name, $event)" />
+              </label>
+            }
+          </div>
+        }
+      } @else {
+        <p class="properties-panel__empty">Este componente no tiene inputs editables.</p>
+      }
+    </section>
   </div>
 </aside>

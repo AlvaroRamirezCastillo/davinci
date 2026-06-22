@@ -9,7 +9,7 @@ import {
   ViewContainerRef,
 } from '@angular/core';
 import { ComponentRegistryService } from '../../../../services/component-registry.service';
-import type { CanvasComponentProperties } from '../../design-canvas';
+import type { CanvasComponentProperties, DataContext } from '../../design-canvas';
 
 @Component({
   selector: 'app-canvas-component-renderer',
@@ -23,6 +23,7 @@ export class CanvasComponentRenderer implements OnDestroy {
 
   readonly tag = input.required<string>();
   readonly properties = input.required<CanvasComponentProperties>();
+  readonly dataContext = input.required<DataContext>();
   readonly propertyChange = output<{ propertyName: string; value: string }>();
 
   private element: HTMLElement | null = null;
@@ -34,6 +35,7 @@ export class CanvasComponentRenderer implements OnDestroy {
     effect(() => {
       const tag = this.tag();
       const properties = this.properties();
+      const dataContext = this.dataContext();
       const viewContainer = this.viewContainer();
 
       if (!viewContainer) {
@@ -41,7 +43,7 @@ export class CanvasComponentRenderer implements OnDestroy {
       }
 
       const didRender = this.renderComponent(tag);
-      this.applyInputs(properties);
+      this.applyInputs(properties, dataContext);
 
       if (didRender) {
         this.bindOutputs(properties);
@@ -92,15 +94,40 @@ export class CanvasComponentRenderer implements OnDestroy {
     return true;
   }
 
-  private applyInputs(properties: CanvasComponentProperties): void {
+  private applyInputs(properties: CanvasComponentProperties, dataContext: DataContext): void {
     if (!this.element) {
       return;
     }
 
-    for (const [propertyName, value] of Object.entries(properties)) {
+    for (const [propertyName, property] of Object.entries(properties)) {
+      const value = property.binding
+        ? this.resolveBinding(property.binding, dataContext)
+        : property.value;
+
       (this.element as unknown as Record<string, unknown>)[propertyName] = value;
-      this.element.setAttribute(this.toKebabCase(propertyName), value);
+
+      if (value === undefined || value === null || typeof value === 'object') {
+        this.element.removeAttribute(this.toKebabCase(propertyName));
+      } else {
+        this.element.setAttribute(this.toKebabCase(propertyName), String(value));
+      }
     }
+  }
+
+  private resolveBinding(binding: string, dataContext: DataContext): unknown {
+    const path = binding.replace(/^\$dataContext\.?/, '');
+
+    if (!path) {
+      return dataContext;
+    }
+
+    return path.split('.').reduce<unknown>((value, segment) => {
+      if (value === null || typeof value !== 'object') {
+        return undefined;
+      }
+
+      return (value as Record<string, unknown>)[segment];
+    }, dataContext);
   }
 
   private bindOutputs(properties: CanvasComponentProperties): void {

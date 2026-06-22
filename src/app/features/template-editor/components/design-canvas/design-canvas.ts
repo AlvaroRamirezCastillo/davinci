@@ -14,36 +14,48 @@ interface CanvasComponent {
 }
 
 export interface CanvasComponentProperties {
-  [key: string]: string;
+  [key: string]: CanvasComponentProperty;
+}
+
+export interface CanvasComponentProperty {
+  value: unknown;
+  binding?: string;
+}
+
+export type DataContext = Record<string, unknown>;
+
+export interface UiLiteralPropMetadata {
+  name: string;
+  value: unknown;
+}
+
+export interface UiBindingPropMetadata {
+  name: string;
+  binding: string;
 }
 
 export interface UiMetadata {
-  schemaVersion: '1.0';
+  schemaVersion: '1.1';
   generatedAt: string;
   layout: {
     type: 'grid';
     columns: number;
     rows: number;
   };
-  dataContracts: Record<string, unknown>;
+  dataContext: DataContext;
   components: UiComponentMetadata[];
 }
 
 export interface UiComponentMetadata {
   id: string;
-  component: string;
+  tag: string;
   layout: {
     column: number;
     row: number;
     columnSpan: number;
     rowSpan: number;
   };
-  props: Record<string, UiLiteralPropMetadata>;
-}
-
-export interface UiLiteralPropMetadata {
-  kind: 'literal';
-  value: string;
+  props: Array<UiLiteralPropMetadata | UiBindingPropMetadata>;
 }
 
 interface ResizeState {
@@ -88,9 +100,11 @@ export class DesignCanvas {
   protected readonly dropPreview = signal<DropPreview | null>(null);
   protected readonly draggingComponentId = signal<number | null>(null);
   protected readonly selectedComponentId = signal<number | null>(null);
+  protected readonly dataContext = signal<DataContext>({});
   protected readonly hasComponents = computed(() => this.components().length > 0);
   protected readonly selectedComponent = computed(
-    () => this.components().find((component) => component.id === this.selectedComponentId()) ?? null,
+    () =>
+      this.components().find((component) => component.id === this.selectedComponentId()) ?? null,
   );
 
   private nextId = 1;
@@ -129,7 +143,8 @@ export class DesignCanvas {
       return;
     }
 
-    const tag = event.dataTransfer?.getData(componentDragType) || event.dataTransfer?.getData('text/plain');
+    const tag =
+      event.dataTransfer?.getData(componentDragType) || event.dataTransfer?.getData('text/plain');
 
     if (!tag) {
       this.clearDragState();
@@ -167,17 +182,17 @@ export class DesignCanvas {
 
   generateMetadata(): UiMetadata {
     return {
-      schemaVersion: '1.0',
+      schemaVersion: '1.1',
       generatedAt: new Date().toISOString(),
       layout: {
         type: 'grid',
         columns: gridColumns,
         rows: gridRows,
       },
-      dataContracts: {},
+      dataContext: this.dataContext(),
       components: this.components().map((component) => ({
         id: `cmp-${component.id}`,
-        component: component.tag,
+        tag: component.tag,
         layout: {
           column: component.column,
           row: component.row,
@@ -199,7 +214,9 @@ export class DesignCanvas {
     event.preventDefault();
     event.stopPropagation();
 
-    this.components.update((components) => components.filter((currentComponent) => currentComponent.id !== component.id));
+    this.components.update((components) =>
+      components.filter((currentComponent) => currentComponent.id !== component.id),
+    );
 
     if (this.selectedComponentId() === component.id) {
       this.closePropertiesPanel();
@@ -214,11 +231,21 @@ export class DesignCanvas {
     }
 
     this.components.update((components) =>
-      components.map((component) => (component.id === selectedComponentId ? { ...component, properties } : component)),
+      components.map((component) =>
+        component.id === selectedComponentId ? { ...component, properties } : component,
+      ),
     );
   }
 
-  protected onComponentPropertyChanged(componentId: number, propertyName: string, value: string): void {
+  protected onDataContextChanged(dataContext: DataContext): void {
+    this.dataContext.set(dataContext);
+  }
+
+  protected onComponentPropertyChanged(
+    componentId: number,
+    propertyName: string,
+    value: string,
+  ): void {
     this.components.update((components) =>
       components.map((component) =>
         component.id === componentId
@@ -226,7 +253,10 @@ export class DesignCanvas {
               ...component,
               properties: {
                 ...component.properties,
-                [propertyName]: value,
+                [propertyName]: {
+                  ...component.properties[propertyName],
+                  value,
+                },
               },
             }
           : component,
@@ -258,7 +288,9 @@ export class DesignCanvas {
     event.preventDefault();
     event.stopPropagation();
 
-    const surface = (event.currentTarget as HTMLElement).closest('.design-canvas__surface') as HTMLElement | null;
+    const surface = (event.currentTarget as HTMLElement).closest(
+      '.design-canvas__surface',
+    ) as HTMLElement | null;
 
     if (!surface) {
       return;
@@ -286,8 +318,12 @@ export class DesignCanvas {
     event.preventDefault();
     event.stopPropagation();
 
-    const columnDelta = Math.round((event.clientX - this.resizeState.startClientX) / this.resizeState.columnPitch);
-    const rowDelta = Math.round((event.clientY - this.resizeState.startClientY) / this.resizeState.rowPitch);
+    const columnDelta = Math.round(
+      (event.clientX - this.resizeState.startClientX) / this.resizeState.columnPitch,
+    );
+    const rowDelta = Math.round(
+      (event.clientY - this.resizeState.startClientY) / this.resizeState.rowPitch,
+    );
     const maxColumnSpan = gridColumns - component.column + 1;
     const maxRowSpan = gridRows - component.row + 1;
 
@@ -323,9 +359,10 @@ export class DesignCanvas {
   }
 
   private previewFromEvent(event: DragEvent): DropPreview {
-    const movedComponentId = this.draggingComponentId() ?? Number(event.dataTransfer?.getData(componentMoveType));
+    const movedComponentId =
+      this.draggingComponentId() ?? Number(event.dataTransfer?.getData(componentMoveType));
     const movedComponent = movedComponentId
-      ? this.components().find((component) => component.id === movedComponentId) ?? null
+      ? (this.components().find((component) => component.id === movedComponentId) ?? null)
       : null;
     const columnSpan = movedComponent?.columnSpan ?? defaultColumnSpan;
     const rowSpan = movedComponent?.rowSpan ?? defaultRowSpan;
@@ -388,18 +425,29 @@ export class DesignCanvas {
   }
 
   private defaultProperties(tag: string): CanvasComponentProperties {
-    return this.componentDocs.defaultProperties(tag);
+    return Object.entries(
+      this.componentDocs.defaultProperties(tag),
+    ).reduce<CanvasComponentProperties>((properties, [name, value]) => {
+      properties[name] = { value };
+
+      return properties;
+    }, {});
   }
 
-  private serializeProperties(properties: CanvasComponentProperties): Record<string, UiLiteralPropMetadata> {
-    return Object.entries(properties).reduce<Record<string, UiLiteralPropMetadata>>((metadata, [propertyName, value]) => {
-      metadata[propertyName] = {
-        kind: 'literal',
-        value,
-      };
-
-      return metadata;
-    }, {});
+  private serializeProperties(
+    properties: CanvasComponentProperties,
+  ): Array<UiLiteralPropMetadata | UiBindingPropMetadata> {
+    return Object.entries(properties).map(([name, property]) =>
+      property.binding
+        ? {
+            name,
+            binding: property.binding,
+          }
+        : {
+            name,
+            value: property.value,
+          },
+    );
   }
 
   private gridMetrics(surface: HTMLElement): {

@@ -3,17 +3,33 @@
   "$id": "/ui-metadata.schema.json",
   "title": "Davinci Server Driven UI Metadata",
   "type": "object",
-  "required": ["schemaVersion", "layout", "dataContracts", "components"],
+  "required": ["schemaVersion", "layout", "dataContext", "components"],
   "additionalProperties": false,
   "properties": {
     "schemaVersion": {
-      "const": "1.0"
+      "const": "1.1"
     },
     "generatedAt": {
       "type": "string",
       "format": "date-time"
     },
     "layout": {
+      "$ref": "#/$defs/gridLayout"
+    },
+    "dataContext": {
+      "type": "object",
+      "description": "View data available to component property bindings.",
+      "additionalProperties": true
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/component"
+      }
+    }
+  },
+  "$defs": {
+    "gridLayout": {
       "type": "object",
       "required": ["type", "columns", "rows"],
       "additionalProperties": false,
@@ -31,31 +47,16 @@
         }
       }
     },
-    "dataContracts": {
-      "type": "object",
-      "description": "Named data contracts available to component bindings.",
-      "additionalProperties": {
-        "$ref": "#/$defs/dataContract"
-      }
-    },
-    "components": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/component"
-      }
-    }
-  },
-  "$defs": {
     "component": {
       "type": "object",
-      "required": ["id", "component", "layout", "props"],
+      "required": ["id", "tag", "layout", "props"],
       "additionalProperties": false,
       "properties": {
         "id": {
           "type": "string",
           "minLength": 1
         },
-        "component": {
+        "tag": {
           "type": "string",
           "minLength": 1
         },
@@ -63,9 +64,9 @@
           "$ref": "#/$defs/gridPlacement"
         },
         "props": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/propValue"
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/componentProp"
           }
         },
         "events": {
@@ -99,132 +100,41 @@
         }
       }
     },
-    "propValue": {
+    "componentProp": {
       "oneOf": [
         {
           "$ref": "#/$defs/literalProp"
         },
         {
-          "$ref": "#/$defs/dataContractBinding"
+          "$ref": "#/$defs/boundProp"
         }
       ]
     },
     "literalProp": {
       "type": "object",
-      "required": ["kind", "value"],
+      "required": ["name", "value"],
       "additionalProperties": false,
       "properties": {
-        "kind": {
-          "const": "literal"
-        },
-        "value": {
-          "type": ["string", "number", "integer", "boolean", "null", "array", "object"]
-        }
-      }
-    },
-    "dataContractBinding": {
-      "type": "object",
-      "required": ["kind", "contract", "path"],
-      "additionalProperties": false,
-      "properties": {
-        "kind": {
-          "const": "dataContract"
-        },
-        "contract": {
+        "name": {
           "type": "string",
           "minLength": 1
-        },
-        "path": {
-          "type": "string",
-          "description": "Path inside the contract response. Example: $.countries"
-        },
-        "mode": {
-          "type": "string",
-          "enum": ["value", "items", "options"],
-          "default": "value"
-        },
-        "itemLabelPath": {
-          "type": "string",
-          "description": "Path inside each item used as the visible label. Example: $.name"
-        },
-        "itemValuePath": {
-          "type": "string",
-          "description": "Path inside each item used as the submitted value. Example: $.id"
-        }
-      }
-    },
-    "dataContract": {
-      "type": "object",
-      "required": ["id", "source"],
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "source": {
-          "oneOf": [
-            {
-              "$ref": "#/$defs/httpSource"
-            },
-            {
-              "$ref": "#/$defs/staticSource"
-            },
-            {
-              "$ref": "#/$defs/contextSource"
-            }
-          ]
-        },
-        "schema": {
-          "type": "object"
-        }
-      }
-    },
-    "httpSource": {
-      "type": "object",
-      "required": ["kind", "url"],
-      "additionalProperties": false,
-      "properties": {
-        "kind": {
-          "const": "http"
-        },
-        "url": {
-          "type": "string"
-        },
-        "method": {
-          "type": "string",
-          "enum": ["GET", "POST", "PUT", "PATCH", "DELETE"],
-          "default": "GET"
-        },
-        "headers": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "staticSource": {
-      "type": "object",
-      "required": ["kind", "value"],
-      "additionalProperties": false,
-      "properties": {
-        "kind": {
-          "const": "static"
         },
         "value": {}
       }
     },
-    "contextSource": {
+    "boundProp": {
       "type": "object",
-      "required": ["kind", "path"],
+      "required": ["name", "binding"],
       "additionalProperties": false,
       "properties": {
-        "kind": {
-          "const": "context"
+        "name": {
+          "type": "string",
+          "minLength": 1
         },
-        "path": {
-          "type": "string"
+        "binding": {
+          "type": "string",
+          "pattern": "^\\$dataContext\\.[A-Za-z0-9_-]+(?:\\.[A-Za-z0-9_-]+)*$",
+          "description": "Runtime path such as $dataContext.countries.value."
         }
       }
     },

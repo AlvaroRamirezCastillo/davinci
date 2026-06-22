@@ -55,7 +55,10 @@
             <app-canvas-component-renderer
               [tag]="component.tag"
               [properties]="component.properties"
-              (propertyChange)="onComponentPropertyChanged(component.id, $event.propertyName, $event.value)"
+              [dataContext]="dataContext()"
+              (propertyChange)="
+                onComponentPropertyChanged(component.id, $event.propertyName, $event.value)
+              "
             />
           </div>
 
@@ -115,7 +118,9 @@
       <app-properties-panel
         [componentTag]="component.tag"
         [properties]="component.properties"
+        [dataContext]="dataContext()"
         (propertiesChange)="onPropertiesChanged($event)"
+        (dataContextChange)="onDataContextChanged($event)"
         (closePanel)="closePropertiesPanel()"
       />
     }
