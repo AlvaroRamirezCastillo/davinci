@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "1.1",
+  "generatedAt": "2026-06-22T02:38:06.683Z",
+  "layout": {
+    "type": "grid",
+    "columns": 12,
+    "rows": 24
+  },
+  "dataContext": {
+    "user": {
+      "name": "alvaro"
+    }
+  },
+  "components": [
+    {
+      "id": "cmp-1",
+      "tag": "stl-input",
+      "layout": {
+        "column": 3,
+        "row": 6,
+        "columnSpan": 3,
+        "rowSpan": 2
+      },
+      "props": [
+        {
+          "name": "placeholder",
+          "value": ""
+        },
+        {
+          "name": "type",
+          "value": "text"
+        },
+        {
+          "name": "value",
+          "binding": "$dataContext.user.name"
+        }
+      ]
+    }
+  ]
+}

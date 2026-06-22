@@ -3,8 +3,23 @@
 
   <section class="template-editor__workspace" aria-label="Template editor workspace">
     <header class="template-editor__toolbar">
-      <button class="template-editor__metadata-button" type="button" (click)="generateMetadata()">
-        Generar metadata
+      @if (metadataStatus() === 'success') {
+        <span class="template-editor__metadata-status template-editor__metadata-status--success">
+          Metadata enviada
+        </span>
+      } @else if (metadataStatus() === 'error') {
+        <span class="template-editor__metadata-status template-editor__metadata-status--error">
+          No se pudo enviar la metadata
+        </span>
+      }
+
+      <button
+        class="template-editor__metadata-button"
+        type="button"
+        [disabled]="isSendingMetadata()"
+        (click)="generateMetadata()"
+      >
+        {{ isSendingMetadata() ? 'Enviando...' : 'Generar metadata' }}
       </button>
     </header>
 
